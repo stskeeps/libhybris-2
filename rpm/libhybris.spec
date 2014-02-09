@@ -286,27 +286,6 @@ Requires: %{name}-libsync = %{version}-%{release}
 %description libsync-devel
 %{summary}.
 
-%package libnfc
-Summary: Near Field Communication for %{name}
-Requires(post): /sbin/ldconfig
-Requires(postun): /sbin/ldconfig
-Group:   System/Libraries
-Requires: %{name} = %{version}-%{release}
-
-%description libnfc
-%{summary}.
-
-%package libnfc-devel
-Summary: Near Field Communication development library for %{name}
-Requires(post): /sbin/ldconfig
-Requires(postun): /sbin/ldconfig
-Group:   System/Libraries
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-libnfc = %{version}-%{release}
-
-%description libnfc-devel
-%{summary}.
-
 %package tests
 Summary: Tests for %{name}
 Group:   System/Libraries
@@ -380,8 +359,6 @@ rm %{buildroot}/%{_libdir}/*.la %{buildroot}/%{_libdir}/libhybris/*.la
 %post libsync -p /sbin/ldconfig
 %postun libsync -p /sbin/ldconfig
 
-%post libnfc -p /sbin/ldconfig
-%postun libnfc -p /sbin/ldconfig
 
 %files
 %defattr(-,root,root,-)
@@ -526,15 +503,6 @@ rm %{buildroot}/%{_libdir}/*.la %{buildroot}/%{_libdir}/libhybris/*.la
 %defattr(-,root,root,-)
 %{_libdir}/libsync.so
 %{_libdir}/pkgconfig/libsync.pc
-
-%files libnfc
-%defattr(-,root,root,-)
-%{_libdir}/libnfc_*.so.*
-
-%files libnfc-devel
-%defattr(-,root,root,-)
-%{_libdir}/libnfc_*.so
-%{_libdir}/pkgconfig/libnfc_*.pc
 
 %files tests
 %defattr(-,root,root,-)
