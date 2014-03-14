@@ -81,6 +81,7 @@ private:
     unsigned int m_bufFormat;
     int m_freeBufs;
     bool m_allocated;
+    bool m_needrealloc;
     int m_buffercount;
     std::list<FbDevNativeWindowBuffer*> m_bufList;
     FbDevNativeWindowBuffer* m_frontBuf;
