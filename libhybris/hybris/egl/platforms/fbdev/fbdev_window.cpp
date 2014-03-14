@@ -72,13 +72,15 @@ FbDevNativeWindow::FbDevNativeWindow( alloc_device_t* alloc,
     m_bufFormat = m_fbDev->format;
     m_usage = GRALLOC_USAGE_HW_FB;
 
+    m_allocated = false;
+    
 #if ANDROID_VERSION_MAJOR>=4 && ANDROID_VERSION_MINOR>=2
     if (m_fbDev->numFramebuffers>0)
-        setBufferCount(m_fbDev->numFramebuffers);
+        m_buffercount = m_fbDev->numFramebuffers;
     else
-        setBufferCount(FRAMEBUFFER_PARTITIONS);
+        m_buffercount = FRAMEBUFFER_PARTITIONS;
 #else
-    setBufferCount(FRAMEBUFFER_PARTITIONS);
+    m_buffercount = FRAMEBUFFER_PARTITIONS;
 #endif
 
 }
@@ -149,6 +151,10 @@ int FbDevNativeWindow::dequeueBuffer(BaseNativeWindowBuffer** buffer, int *fence
 
     pthread_mutex_lock(&_mutex);
 
+    if (!m_allocated)
+    {  
+        setBufferCount(m_buffercount);
+    }
     HYBRIS_TRACE_BEGIN("fbdev-platform", "dequeueBuffer-wait", "");
 #if defined(DEBUG)
 
@@ -451,7 +457,7 @@ unsigned int FbDevNativeWindow::transformHint() const
  */
 int FbDevNativeWindow::setUsage(int usage)
 {
-    int need_realloc = (m_usage != usage);
+    int need_realloc = (m_usage != usage) && m_allocated;
     TRACE("usage=x%x realloc=%d", usage, need_realloc);
     m_usage = usage;
     if (need_realloc)
@@ -469,7 +475,7 @@ int FbDevNativeWindow::setUsage(int usage)
  */
 int FbDevNativeWindow::setBuffersFormat(int format)
 {
-    int need_realloc = (format != m_bufFormat);
+    int need_realloc = (format != m_bufFormat) && m_allocated;
     TRACE("format=x%x realloc=%d", format, need_realloc);
     m_bufFormat = format;
     if (need_realloc)
@@ -487,7 +493,7 @@ int FbDevNativeWindow::setBufferCount(int cnt)
     TRACE("cnt=%d", cnt);
     int err=NO_ERROR;
     pthread_mutex_lock(&_mutex);
-
+    m_allocated = true;
     destroyBuffers();
 
     for(unsigned int i = 0; i < cnt; i++)
