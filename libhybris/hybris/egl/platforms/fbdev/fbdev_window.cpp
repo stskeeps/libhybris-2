@@ -73,7 +73,7 @@ FbDevNativeWindow::FbDevNativeWindow( alloc_device_t* alloc,
     m_usage = GRALLOC_USAGE_HW_FB;
 
     m_allocated = false;
-    
+    m_needrealloc = false;    
 #if ANDROID_VERSION_MAJOR>=4 && ANDROID_VERSION_MINOR>=2
     if (m_fbDev->numFramebuffers>0)
         m_buffercount = m_fbDev->numFramebuffers;
@@ -153,6 +153,7 @@ int FbDevNativeWindow::dequeueBuffer(BaseNativeWindowBuffer** buffer, int *fence
 
     if (!m_allocated)
     {
+        m_needrealloc = true;
         pthread_mutex_unlock(&_mutex);  
         setBufferCount(m_buffercount);
         pthread_mutex_lock(&_mutex);
@@ -463,8 +464,10 @@ int FbDevNativeWindow::setUsage(int usage)
     TRACE("usage=x%x realloc=%d", usage, need_realloc);
     m_usage = usage;
     if (need_realloc)
+    {
+        m_needrealloc = true;
         this->setBufferCount(m_bufList.size());
-
+    }
     return NO_ERROR;
 }
 
@@ -481,7 +484,10 @@ int FbDevNativeWindow::setBuffersFormat(int format)
     TRACE("format=x%x realloc=%d", format, need_realloc);
     m_bufFormat = format;
     if (need_realloc)
+    {
+        m_needrealloc = true;
         this->setBufferCount(m_bufList.size());
+    }
     return NO_ERROR;
 }
 
@@ -495,7 +501,15 @@ int FbDevNativeWindow::setBufferCount(int cnt)
     TRACE("cnt=%d", cnt);
     int err=NO_ERROR;
     pthread_mutex_lock(&_mutex);
-    m_allocated = true;
+    if (!m_needrealloc && m_allocated)
+    {   
+        if (m.bufList.size() == cnt)
+        {
+            pthread_mutex_unlock(&_mutex);
+            return NO_ERROR;
+        }
+    }
+    m_needrealloc = false;
     destroyBuffers();
 
     for(unsigned int i = 0; i < cnt; i++)
@@ -520,6 +534,7 @@ int FbDevNativeWindow::setBufferCount(int cnt)
         m_freeBufs++;
         m_bufList.push_back(fbnb);
     }
+    m_allocated = true;
     pthread_mutex_unlock(&_mutex);
 
     return err;
