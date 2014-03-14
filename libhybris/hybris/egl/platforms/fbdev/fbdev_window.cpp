@@ -503,7 +503,7 @@ int FbDevNativeWindow::setBufferCount(int cnt)
     pthread_mutex_lock(&_mutex);
     if (!m_needrealloc && m_allocated)
     {   
-        if (m.bufList.size() == cnt)
+        if (m_bufList.size() == cnt)
         {
             pthread_mutex_unlock(&_mutex);
             return NO_ERROR;
