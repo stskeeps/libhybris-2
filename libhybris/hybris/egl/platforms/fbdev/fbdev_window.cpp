@@ -152,8 +152,10 @@ int FbDevNativeWindow::dequeueBuffer(BaseNativeWindowBuffer** buffer, int *fence
     pthread_mutex_lock(&_mutex);
 
     if (!m_allocated)
-    {  
+    {
+        pthread_mutex_unlock(&_mutex);  
         setBufferCount(m_buffercount);
+        pthread_mutex_lock(&_mutex);
     }
     HYBRIS_TRACE_BEGIN("fbdev-platform", "dequeueBuffer-wait", "");
 #if defined(DEBUG)
