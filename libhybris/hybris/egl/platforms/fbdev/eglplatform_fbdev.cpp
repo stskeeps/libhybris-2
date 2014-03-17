@@ -27,7 +27,7 @@ extern "C" void fbdevws_init_module(struct ws_egl_interface *egl_iface)
 
 extern "C" int fbdevws_IsValidDisplay(EGLNativeDisplayType display)
 {
-	assert (gralloc != NULL);
+//	assert (gralloc != NULL);
 	return display == EGL_DEFAULT_DISPLAY;
 }
 
