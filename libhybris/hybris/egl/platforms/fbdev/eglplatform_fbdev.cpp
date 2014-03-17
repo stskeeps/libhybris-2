@@ -22,19 +22,6 @@ static struct ws_egl_interface *_egl_iface = NULL;
 
 extern "C" void fbdevws_init_module(struct ws_egl_interface *egl_iface)
 {
-	int err;
-	err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (const hw_module_t **) &gralloc);
-	if (gralloc==NULL) {
-		fprintf(stderr, "failed to get gralloc module: (%s)\n",strerror(-err));
-		assert(0);
-	}
-
-	err = framebuffer_open((hw_module_t *) gralloc, &framebuffer);
-	if (err) {
-		fprintf(stderr, "ERROR: failed to open framebuffer: (%s)\n",strerror(-err));
-		assert(0);
-	}
-	TRACE("** framebuffer_open: status=(%s) format=x%x", strerror(-err), framebuffer->format);
 	_egl_iface = egl_iface;
 }
 
@@ -50,9 +37,21 @@ extern "C" EGLNativeWindowType fbdevws_CreateWindow(EGLNativeWindowType win, EGL
 	
 	assert (gralloc != NULL);
 	assert (_nativewindow == NULL);
-
-	if (gralloc == NULL)
+	if (framebuffer == NULL)
 	{
+		err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (const hw_module_t **) &gralloc);
+		if (gralloc==NULL) {
+			fprintf(stderr, "failed to get gralloc module: (%s)\n",strerror(-err));
+			assert(0);
+		}
+		
+		err = framebuffer_open((hw_module_t *) gralloc, &framebuffer);
+		if (err) {
+			fprintf(stderr, "ERROR: failed to open framebuffer: (%s)\n",strerror(-err));
+			assert(0);
+		}
+		TRACE("** framebuffer_open: status=(%s) format=x%x", strerror(-err), framebuffer->format);
+
 		err = gralloc_open((const hw_module_t *) gralloc, &alloc);
 		if (err) {
 			fprintf(stderr, "ERROR: failed to open gralloc: (%s)\n",strerror(-err));
