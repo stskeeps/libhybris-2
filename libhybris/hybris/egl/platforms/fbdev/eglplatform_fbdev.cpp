@@ -35,7 +35,6 @@ extern "C" EGLNativeWindowType fbdevws_CreateWindow(EGLNativeWindowType win, EGL
 {
 	int err;
 	
-	assert (gralloc != NULL);
 	assert (_nativewindow == NULL);
 	if (framebuffer == NULL)
 	{
