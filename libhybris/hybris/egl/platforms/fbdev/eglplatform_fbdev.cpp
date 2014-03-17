@@ -18,6 +18,7 @@ static gralloc_module_t *gralloc = 0;
 static framebuffer_device_t *framebuffer = 0;
 static alloc_device_t *alloc = 0;
 static FbDevNativeWindow *_nativewindow = NULL;
+static struct ws_egl_interface *_egl_iface = NULL;
 
 extern "C" void fbdevws_init_module(struct ws_egl_interface *egl_iface)
 {
@@ -34,7 +35,7 @@ extern "C" void fbdevws_init_module(struct ws_egl_interface *egl_iface)
 		assert(0);
 	}
 	TRACE("** framebuffer_open: status=(%s) format=x%x", strerror(-err), framebuffer->format);
-
+	_egl_iface = egl_iface;
 }
 
 extern "C" int fbdevws_IsValidDisplay(EGLNativeDisplayType display)
@@ -58,7 +59,7 @@ extern "C" EGLNativeWindowType fbdevws_CreateWindow(EGLNativeWindowType win, EGL
 			assert(0);
 		}
 		TRACE("** gralloc_open %p status=%s", gralloc, strerror(-err));
-		eglplatformcommon_init(egl_iface, gralloc, alloc);
+		eglplatformcommon_init(_egl_iface, gralloc, alloc);
 	}		
 
 	_nativewindow = new FbDevNativeWindow(alloc, framebuffer);
