@@ -18,47 +18,42 @@ static gralloc_module_t *gralloc = 0;
 static framebuffer_device_t *framebuffer = 0;
 static alloc_device_t *alloc = 0;
 static FbDevNativeWindow *_nativewindow = NULL;
-static struct ws_egl_interface *_egl_iface = NULL;
 
 extern "C" void fbdevws_init_module(struct ws_egl_interface *egl_iface)
 {
-	_egl_iface = egl_iface;
+	int err;
+	err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (const hw_module_t **) &gralloc);
+	if (gralloc==NULL) {
+		fprintf(stderr, "failed to get gralloc module: (%s)\n",strerror(-err));
+		assert(0);
+	}
+
+	err = framebuffer_open((hw_module_t *) gralloc, &framebuffer);
+	if (err) {
+		fprintf(stderr, "ERROR: failed to open framebuffer: (%s)\n",strerror(-err));
+		assert(0);
+	}
+	TRACE("** framebuffer_open: status=(%s) format=x%x", strerror(-err), framebuffer->format);
+
+	err = gralloc_open((const hw_module_t *) gralloc, &alloc);
+	if (err) {
+		fprintf(stderr, "ERROR: failed to open gralloc: (%s)\n",strerror(-err));
+		assert(0);
+	}
+	TRACE("** gralloc_open %p status=%s", gralloc, strerror(-err));
+	eglplatformcommon_init(egl_iface, gralloc, alloc);
 }
 
 extern "C" int fbdevws_IsValidDisplay(EGLNativeDisplayType display)
 {
-//	assert (gralloc != NULL);
+	assert (gralloc != NULL);
 	return display == EGL_DEFAULT_DISPLAY;
 }
 
 extern "C" EGLNativeWindowType fbdevws_CreateWindow(EGLNativeWindowType win, EGLNativeDisplayType display)
 {
-	int err;
-	
+	assert (gralloc != NULL);
 	assert (_nativewindow == NULL);
-	if (framebuffer == NULL)
-	{
-		err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (const hw_module_t **) &gralloc);
-		if (gralloc==NULL) {
-			fprintf(stderr, "failed to get gralloc module: (%s)\n",strerror(-err));
-			assert(0);
-		}
-		
-		err = framebuffer_open((hw_module_t *) gralloc, &framebuffer);
-		if (err) {
-			fprintf(stderr, "ERROR: failed to open framebuffer: (%s)\n",strerror(-err));
-			assert(0);
-		}
-		TRACE("** framebuffer_open: status=(%s) format=x%x", strerror(-err), framebuffer->format);
-
-		err = gralloc_open((const hw_module_t *) gralloc, &alloc);
-		if (err) {
-			fprintf(stderr, "ERROR: failed to open gralloc: (%s)\n",strerror(-err));
-			assert(0);
-		}
-		TRACE("** gralloc_open %p status=%s", gralloc, strerror(-err));
-		eglplatformcommon_init(_egl_iface, gralloc, alloc);
-	}		
 
 	_nativewindow = new FbDevNativeWindow(alloc, framebuffer);
 	_nativewindow->common.incRef(&_nativewindow->common);

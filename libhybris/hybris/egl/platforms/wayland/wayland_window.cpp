@@ -180,7 +180,7 @@ WaylandNativeWindow::WaylandNativeWindow(struct wl_egl_window *window, struct wl
 
     this->m_alloc = alloc_device;
 
-    m_usage=GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_TEXTURE;
+    m_usage=GRALLOC_USAGE_HW_RENDER;
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&cond, NULL);
     m_freeBufs = 0;
@@ -341,7 +341,7 @@ int WaylandNativeWindow::dequeueBuffer(BaseNativeWindowBuffer **buffer, int *fen
         m_bufList.erase(it);
         wnb = addBuffer();
     }
-
+    *fenceFd = -1;
     wnb->busy = 1;
     *buffer = wnb;
     --m_freeBufs;
@@ -528,8 +528,9 @@ int WaylandNativeWindow::cancelBuffer(BaseNativeWindowBuffer* buffer, int fenceF
     WaylandNativeWindowBuffer *wnb = (WaylandNativeWindowBuffer*) buffer;
 
     lock();
+    assert(fenceFd == -1);
     HYBRIS_TRACE_BEGIN("wayland-platform", "cancelBuffer", "-%p", wnb);
-
+    
     /* Check first that it really is our buffer */
     for (it = m_bufList.begin(); it != m_bufList.end(); it++)
     {
@@ -700,10 +701,10 @@ int WaylandNativeWindow::setBuffersDimensions(int width, int height) {
 }
 
 int WaylandNativeWindow::setUsage(int usage) {
-    if ((usage | GRALLOC_USAGE_HW_TEXTURE) != m_usage)
+    if ((usage /* | GRALLOC_USAGE_HW_TEXTURE */) != m_usage)
     {
         TRACE("old-usage:x%x new-usage:x%x", m_usage, usage);
-        m_usage = usage | GRALLOC_USAGE_HW_TEXTURE;
+        m_usage = usage /* | GRALLOC_USAGE_HW_TEXTURE */;
         /* Buffers will be re-allocated when dequeued */
     } else {
         TRACE("usage:x%x", usage);
